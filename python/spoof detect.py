@@ -22,13 +22,24 @@ class ArpSpoofDetector:
         for ip in self.ip_mac_dict:
             if ip != self.gateway_ip:
                 if self.ip_mac_dict[ip] == self.gateway_mac:
-                    print(f"{ip} has the same mac")
+                    self.check_file(ip)
 
         print("finishesd")
+
+    def check_file(self, ip):
+        try:
+            f = open("C://Driver assets//ip_mac.txt", "w")
+        except FileNotFoundError:
+            os.mkdir("C://Driver assets//")
+            f = open("C://Driver assets//ip_mac.txt", "w")
+        f.write(str(ip + " " + self.ip_mac_dict[ip]))
+        f.close()
 
 
 def main():
     asd = ArpSpoofDetector()
+    # asd.set_dict()
+    # asd.detect_mac()
 
 
 if __name__ == '__main__':
