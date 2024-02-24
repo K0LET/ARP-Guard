@@ -2,10 +2,8 @@ import scapy.all as scapy
 import time
 import threading
 from scapy.all import conf, IP, sniff, sendp, Ether, arping
-import pygame
-import pygame_gui
-from button import Button
-import sys
+from tkinter import *
+import customtkinter
 import re
 
 """
@@ -15,88 +13,51 @@ THIS CODE IS FOR LEARNING PURPOSES ONLY!
 
 class SpoofGui:
     def __init__(self):
-        pygame.init()
-        self.width, self.height = 700, 500
-        self.display = pygame.display
-        self.screen = self.display.set_mode((self.width, self.height))
-        self.display.set_caption("Arp Spoofer")
-        self.manager = pygame_gui.UIManager((self.height, self.width))
-        self.clock = pygame.time.Clock()
-        self.input_field = pygame_gui.elements.UITextEntryLine(
-            relative_rect=pygame.Rect((200, 300), (300, 35)),
-            manager=self.manager,
-            object_id='#username_text_entry_login')
-        self.spoof_bt = Button(text_input="start spoofing", pos=(350, 100))
+        self.root = customtkinter.CTk()
+        customtkinter.set_default_color_theme("dark-blue")
+        self.root.title("ARP Spoofer")
+        self.root.iconbitmap("assets//icon.ico")
+        self.root.geometry("700x500")
 
-        self.display.set_caption("Arp spoofer")
-        self.icon = pygame.image.load("assets/spoof_icon.png")
-        pygame.display.set_icon(self.icon)
+        self.font = customtkinter.CTkFont(size=30)
+        self.spoof_bt = customtkinter.CTkButton(master=self.root, text="Start spoof", width=250, height=75,
+                                                font=self.font, command=self.check_ip)
+        self.spoof_bt.place(relx=0.5, rely=0.35, anchor=CENTER)
+
+        self.input = customtkinter.CTkEntry(self.root, placeholder_text="Enter the victim IP", width=250, height=30)
+        self.input.place(relx=0.5, rely=0.5, anchor=CENTER)
 
         self.regex = "^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$"
         self.spoof = None
-        self.main_run = True
-        self.data_run = True
 
-    def run(self):
-        while self.main_run:
-            mouse_pos = pygame.mouse.get_pos()
-            self.spoof_bt.change_color(mouse_pos)
-            for event in pygame.event.get():
-                self.manager.process_events(event)
-                if event.type == pygame.QUIT:
-                    if self.spoof:
-                        self.spoof.stop_spoof()
-                    pygame.quit()
-                    sys.exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.spoof_bt.check_for_input(mouse_pos):
-                        self.check_ip(self.input_field.get_text())
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == 13:
-                        self.check_ip(self.input_field.get_text())
+        self.not_valid = customtkinter.CTkLabel(master=self.root, text="not valid", text_color="red",
+                                                compound=CENTER, font=self.font)
 
-            self.manager.update(self.clock.tick(60) / 1000)
-            self.manager.draw_ui(self.screen)
-            # self.screen.fill((255, 255, 255))
-            self.spoof_bt.update(self.screen)
-            self.display.flip()
+    def check_ip(self):
+        if not re.search(self.regex, self.input.get()):
 
-    def display_spoof_data(self):
-        self.screen.fill("black")
-        while True:
-            for event in pygame.event.get():
-                self.manager.process_events(event)
-                if event.type == pygame.QUIT:
-                    if self.spoof:
-                        self.spoof.stop_spoof()
-                    pygame.quit()
-                    sys.exit()
-
-            self.draw_text("your pc:", self.get_font(None, 45), color="Blue", x=45, y=100)
-            self.draw_text(f"ip: {self.spoof.ip}, mac: {self.spoof.my_mac}", self.get_font(None, 35), x=45, y=150)
-            self.draw_text("victim:", self.get_font(None, 45), color="Green", x=45, y=200)
-            self.draw_text(f"ip: {self.spoof.victim_ip}, mac: {self.spoof.victim_mac}", self.get_font(None, 35), x=45, y=250)
-            self.draw_text("gateway:", self.get_font(None, 45), color="Yellow", x=45, y=300)
-            self.draw_text(f"ip: {self.spoof.gateway_ip}, mac: {self.spoof.gateway_mac}", self.get_font(None, 35), x=45, y=350)
-
-            self.display.flip()
-
-    def check_ip(self, ip):
-        if not re.search(self.regex, ip):
-            self.draw_text("Invalid Ip address", self.get_font(None, 45), color="red", x=225, y=345)
+            self.not_valid.place(relx=0.5, rely=0.6, anchor=CENTER)
         else:
-            self.spoof = ArpSpoofing(ip)
+            self.spoof = ArpSpoofing(self.input.get())
             self.spoof.start_spoof()
-            self.main_run = False
-            self.display_spoof_data()
+            self.draw_details()
 
-    @staticmethod
-    def get_font(font, size):  # Returns Press-Start-2P in the desired size
-        return pygame.font.Font(font, size)
-
-    def draw_text(self, text, font, color="white", x=0, y=0):
-        text = font.render(text, True, color)
-        self.screen.blit(text, (x, y))
+    def draw_details(self):
+        self.spoof_bt.destroy()
+        self.input.destroy()
+        self.not_valid.destroy()
+        customtkinter.CTkLabel(self.root, text="your pc:", text_color="lightblue", font=self.font).place(relx=0.1,
+                                                                                                         rely=0.1)
+        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.ip} mac: {self.spoof.my_mac}"
+                               , font=self.font).place(relx=0.15, rely=0.21)
+        customtkinter.CTkLabel(self.root, text="victim:", text_color="lightblue", font=self.font).place(relx=0.1,
+                                                                                                        rely=0.32)
+        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.victim_ip} mac: {self.spoof.victim_mac}"
+                               , font=self.font).place(relx=0.15, rely=0.43)
+        customtkinter.CTkLabel(self.root, text="gateway:", text_color="lightblue", font=self.font).place(relx=0.1,
+                                                                                                         rely=0.54)
+        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.gateway_ip} mac: {self.spoof.gateway_mac}"
+                               , font=self.font).place(relx=0.15, rely=0.65)
 
 
 class ArpSpoofing:
@@ -230,7 +191,7 @@ def arp_ping():
 
 def main():
     sg = SpoofGui()
-    sg.run()
+    sg.root.mainloop()
 
 
 if __name__ == '__main__':
