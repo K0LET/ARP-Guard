@@ -1,6 +1,6 @@
 import pygame
 from button import Button
-import SpoofRemove
+import Tools
 import sys
 
 
@@ -37,7 +37,7 @@ class GUI:
                     if self.clear_arp.check_for_input(mouse_pos):
                         SpoofRemove.run_as_admin()
                     if self.get_arp.check_for_input(mouse_pos):
-                        SpoofRemove.run_cmd("arp -a")
+                        SpoofRemove.run_cmd()
                 elif event.type == pygame.VIDEORESIZE:
                     self.width, self.height = event.size
 

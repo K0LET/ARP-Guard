@@ -51,6 +51,9 @@ class SpoofGui:
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if self.spoof_bt.check_for_input(mouse_pos):
                         self.check_ip(self.input_field.get_text())
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == 13:
+                        self.check_ip(self.input_field.get_text())
 
             self.manager.update(self.clock.tick(60) / 1000)
             self.manager.draw_ui(self.screen)
@@ -80,7 +83,7 @@ class SpoofGui:
 
     def check_ip(self, ip):
         if not re.search(self.regex, ip):
-            self.draw_text("Invalid Ip address", self.get_font(None, 30), color="red", x=220, y=345)
+            self.draw_text("Invalid Ip address", self.get_font(None, 45), color="red", x=225, y=345)
         else:
             self.spoof = ArpSpoofing(ip)
             self.spoof.start_spoof()
