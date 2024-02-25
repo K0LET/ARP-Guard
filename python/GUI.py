@@ -5,7 +5,7 @@ import customtkinter
 class GUI:
     def __init__(self):
         self.root = customtkinter.CTk()
-        customtkinter.set_default_color_theme("blue")
+        customtkinter.set_default_color_theme("dark-blue")
         self.root.title("ARP Guard")
         self.root.iconbitmap("assets//icon.ico")
         self.root.geometry("800x700")
