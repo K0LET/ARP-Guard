@@ -29,7 +29,8 @@ def run_cmd(command="arp -a"):
     """
     try:
         if sys.platform == 'win32':
-            subprocess.run(f"start cmd /K {command}", shell=True)
+            arp_cache = subprocess.run(f"start cmd /K {command}", shell=True)
+            print(arp_cache)
         else:
             raise RuntimeError("Unsupported platform")
     except Exception as e:
@@ -69,3 +70,9 @@ class SpoofDetector:
             f = open("C://Driver assets//ip_mac.txt", "w")
         f.write(str(ip + " " + self.ip_mac_dict[ip]))
         f.close()
+
+
+if __name__ == '__main__':
+    with os.popen("arp -a") as f:
+        data = f.read()
+        print(data)

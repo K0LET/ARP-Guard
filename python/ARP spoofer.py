@@ -1,12 +1,12 @@
 import scapy.all as scapy
 import time
-import threading
 from scapy.all import conf, IP, sniff, sendp, Ether, arping
 from tkinter import *
 import customtkinter
 import re
 import win32api
 import win32con
+import threading
 
 """
 THIS CODE IS FOR LEARNING PURPOSES ONLY!
@@ -19,11 +19,15 @@ class SpoofGui:
         self.root.title("ARP Spoofer")
         self.root.iconbitmap("assets//spoof_icon.ico")
         self.root.geometry("700x500")
-
-        self.font = customtkinter.CTkFont(size=30)
+        customtkinter.set_appearance_mode("dark")
         self.spoof_bt = customtkinter.CTkButton(master=self.root, text="Start spoof", width=250, height=75,
-                                                font=self.font, command=self.check_ip, fg_color="darkred", hover_color="red")
+                                                font=self.get_font(), command=self.check_ip, fg_color="darkred", hover_color="red")
         self.spoof_bt.place(relx=0.5, rely=0.35, anchor=CENTER)
+
+        self.show_ips_bt = customtkinter.CTkButton(master=self.root, text="Show IPs", width=150, height=40,
+                                                   font=self.get_font(20), command=self.arp_ping, fg_color="darkred",
+                                                   hover_color="red")
+        self.show_ips_bt.place(relx=0.5, rely=0.85, anchor=CENTER)
 
         self.input = customtkinter.CTkEntry(self.root, placeholder_text="Enter the victim IP", width=250, height=30)
         self.input.place(relx=0.5, rely=0.5, anchor=CENTER)
@@ -32,7 +36,7 @@ class SpoofGui:
         self.spoof = None
 
         self.not_valid = customtkinter.CTkLabel(master=self.root, text="not valid", text_color="red",
-                                                compound=CENTER, font=self.font)
+                                                compound=CENTER, font=self.get_font())
 
     def check_ip(self):
         if not re.search(self.regex, self.input.get()):
@@ -40,26 +44,50 @@ class SpoofGui:
         else:
             self.show_warning("This program is for learning purposes only!", "ARP Spoofer Warning")
             self.spoof = ArpSpoofing(self.input.get())
-            self.spoof.start_spoof()
+            t = threading.Thread(target=self.spoof.start_spoof, daemon=True)
+            t.start()
             self.draw_details()
+
+    def draw_details(self):
+        self.destroy()
+        customtkinter.CTkLabel(self.root, text="your pc:", text_color="red", font=self.get_font()).place(relx=0.1, rely=0.1)
+        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.ip} mac: {self.spoof.my_mac}"
+                               , font=self.get_font()).place(relx=0.15, rely=0.21)
+        customtkinter.CTkLabel(self.root, text="victim:", text_color="red", font=self.get_font()).place(relx=0.1, rely=0.32)
+        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.victim_ip} mac: {self.spoof.victim_mac}"
+                               , font=self.get_font()).place(relx=0.15, rely=0.43)
+        customtkinter.CTkLabel(self.root, text="gateway:", text_color="red", font=self.get_font()).place(relx=0.1, rely=0.54)
+        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.gateway_ip} mac: {self.spoof.gateway_mac}"
+                               , font=self.get_font()).place(relx=0.15, rely=0.65)
+
+    def destroy(self):
+        self.spoof_bt.destroy()
+        self.input.destroy()
+        self.not_valid.destroy()
+        self.show_ips_bt.destroy()
+
+    @staticmethod
+    def arp_ping():
+        """
+        this function prints all the ips on the same lan
+        :return:
+        """
+        try:
+            ip = scapy.get_if_addr(conf.iface).split(".")
+            ip[-1] = "0"
+            arping(".".join(ip) + "/24", verbose=True)
+        except ImportError:
+            print("Couldn't Import Scapy ")
+        except KeyError:
+            print("ARP Scan didn't work right...")
 
     @staticmethod
     def show_warning(message, title="Warning"):
         win32api.MessageBox(0, message, title, win32con.MB_ICONWARNING | win32con.MB_OK)
 
-    def draw_details(self):
-        self.spoof_bt.destroy()
-        self.input.destroy()
-        self.not_valid.destroy()
-        customtkinter.CTkLabel(self.root, text="your pc:", text_color="red", font=self.font).place(relx=0.1, rely=0.1)
-        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.ip} mac: {self.spoof.my_mac}"
-                               , font=self.font).place(relx=0.15, rely=0.21)
-        customtkinter.CTkLabel(self.root, text="victim:", text_color="red", font=self.font).place(relx=0.1, rely=0.32)
-        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.victim_ip} mac: {self.spoof.victim_mac}"
-                               , font=self.font).place(relx=0.15, rely=0.43)
-        customtkinter.CTkLabel(self.root, text="gateway:", text_color="red", font=self.font).place(relx=0.1, rely=0.54)
-        customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.gateway_ip} mac: {self.spoof.gateway_mac}"
-                               , font=self.font).place(relx=0.15, rely=0.65)
+    @staticmethod
+    def get_font(size=30):
+        return customtkinter.CTkFont(size=size)
 
 
 class ArpSpoofing:
@@ -174,21 +202,6 @@ class ArpSpoofing:
         self.handle_t.start()
         self.run_spoof_t = threading.Thread(target=self.run_spoofer, daemon=True)
         self.run_spoof_t.start()
-
-
-def arp_ping():
-    """
-    this function prints all the ips on the same lan
-    :return:
-    """
-    try:
-        ip = scapy.get_if_addr(conf.iface).split(".")
-        ip[-1] = "0"
-        arping(".".join(ip) + "/24")
-    except ImportError:
-        print("Couldn't Import Scapy ")
-    except KeyError:
-        print("ARP Scan didn't work right...")
 
 
 def main():
