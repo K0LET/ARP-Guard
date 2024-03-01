@@ -25,7 +25,7 @@ class GUI:
                                                width=250,
                                                height=70,
                                                font=self.font,
-                                               command=Tools.run_cmd)
+                                               command=self.show_arp_cache)
         self.get_arp.place(relx=0.5, rely=0.5, anchor=CENTER)
         self.detect_spoof = customtkinter.CTkButton(master=self.root,
                                                     text="Detect Spoof",
@@ -34,7 +34,26 @@ class GUI:
                                                     font=self.font,
                                                     command=self.sd.detect_mac)
         self.detect_spoof.place(relx=0.5, rely=0.7, anchor=CENTER)
+
+        self.show_arp_flag = False
+        self.arp_cache = None
         self.root.mainloop()
+
+    def show_arp_cache(self):
+        if not self.show_arp_flag:
+            self.show_arp_flag = True
+            self.arp_cache = customtkinter.CTkToplevel()
+            self.arp_cache.title("ARP Cache")
+            my_frame = customtkinter.CTkScrollableFrame(self.arp_cache, width=600, height=500)
+            customtkinter.CTkLabel(my_frame, text=Tools.get_arp_cache(), font=customtkinter.CTkFont(size=25),
+                                   text_color="white").pack()
+            my_frame.pack()
+            self.arp_cache.mainloop()
+        else:
+            if self.arp_cache:
+                self.show_arp_flag = False
+                self.arp_cache.destroy()
+                self.show_arp_cache()
 
 
 GUI()

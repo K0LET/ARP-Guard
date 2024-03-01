@@ -7,6 +7,7 @@ import re
 import win32api
 import win32con
 import threading
+import Tools
 
 """
 THIS CODE IS FOR LEARNING PURPOSES ONLY!
@@ -21,11 +22,11 @@ class SpoofGui:
         self.root.geometry("700x500")
         customtkinter.set_appearance_mode("dark")
         self.spoof_bt = customtkinter.CTkButton(master=self.root, text="Start spoof", width=250, height=75,
-                                                font=self.get_font(), command=self.check_ip, fg_color="darkred", hover_color="red")
+                                                font=self.get_font(), command=self.start_spoof, fg_color="darkred", hover_color="red")
         self.spoof_bt.place(relx=0.5, rely=0.35, anchor=CENTER)
 
         self.show_ips_bt = customtkinter.CTkButton(master=self.root, text="Show IPs", width=150, height=40,
-                                                   font=self.get_font(20), command=self.arp_ping, fg_color="darkred",
+                                                   font=self.get_font(20), command=self.display_ips, fg_color="darkred",
                                                    hover_color="red")
         self.show_ips_bt.place(relx=0.5, rely=0.85, anchor=CENTER)
 
@@ -37,6 +38,13 @@ class SpoofGui:
 
         self.not_valid = customtkinter.CTkLabel(master=self.root, text="not valid", text_color="red",
                                                 compound=CENTER, font=self.get_font())
+
+        self.show_ips_window = None
+        self.show_ips_flag = False
+
+    def start_spoof(self):
+        t = threading.Thread(target=self.check_ip, daemon=True)
+        t.start()
 
     def check_ip(self):
         if not re.search(self.regex, self.input.get()):
@@ -66,20 +74,24 @@ class SpoofGui:
         self.not_valid.destroy()
         self.show_ips_bt.destroy()
 
-    @staticmethod
-    def arp_ping():
-        """
-        this function prints all the ips on the same lan
-        :return:
-        """
-        try:
+    def display_ips(self):
+        if not self.show_ips_flag:
             ip = scapy.get_if_addr(conf.iface).split(".")
             ip[-1] = "0"
-            arping(".".join(ip) + "/24", verbose=True)
-        except ImportError:
-            print("Couldn't Import Scapy ")
-        except KeyError:
-            print("ARP Scan didn't work right...")
+            ip_list = Tools.send_arp_broadcast(".".join(ip) + "/24")
+            self.show_ips_flag = True
+            self.show_ips_window = customtkinter.CTkToplevel()
+            self.show_ips_window.title("IPs on the same lan")
+            my_frame = customtkinter.CTkScrollableFrame(self.show_ips_window, width=600, height=500)
+            customtkinter.CTkLabel(my_frame, text=ip_list, font=customtkinter.CTkFont(size=25),
+                                   text_color="white").pack()
+            my_frame.pack()
+            self.show_ips_window.mainloop()
+        else:
+            if self.show_ips_window:
+                self.show_ips_flag = False
+                self.show_ips_window.destroy()
+                self.display_ips()
 
     @staticmethod
     def show_warning(message, title="Warning"):
