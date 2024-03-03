@@ -1,9 +1,10 @@
 from ctypes import *
 import sys
 import subprocess
+import multiprocessing
 import os
 import re
-from scapy.all import conf
+from scapy.all import conf, sniff, Ether
 import scapy.all as scapy
 import database
 
@@ -89,7 +90,35 @@ class SpoofDetector:
         return ret_flag, ips
 
 
+class PacketFlow:
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def arp_filter(packet):
+        if scapy.ARP in packet:
+            # Check the source MAC address and decide whether to allow or block
+            if packet[Ether].src == 'd4:12:43:f1:f1:dc':
+                print("blocked")
+                return None  # Block the packet
+            else:
+                return packet  # Allow the packet to be processed
+
+    #TODO: not working
+
+    @staticmethod
+    def print_p(packet):
+        if packet.haslayer(scapy.ARP):
+            arp_packet = packet[scapy.ARP]
+            print(f"ARP Packet: {arp_packet.psrc}")
+
+    def sniff_arp_packets(self, interface="‏‏Ethernet"):
+        # Define a custom filter for ARP packets
+        # Use scapy's sniff function to capture ARP packets
+        while True:
+            sniff(lfilter=self.arp_filter, prn=self.print_p)
+
+
 if __name__ == '__main__':
-    with os.popen("arp -a") as f:
-        data = f.read()
-        print(data)
+    pf = PacketFlow()
+    pf.sniff_arp_packets()
