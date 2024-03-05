@@ -16,31 +16,78 @@ THIS CODE IS FOR LEARNING PURPOSES ONLY!
 
 class SpoofGui:
     def __init__(self):
+        # window
         self.root = customtkinter.CTk()
+        self.set_window()
+
+        # widgets
+        self.spoof_bt = None
+        self.show_ips_bt = None
+        self.input = None
+        self.not_valid = None
+        self.switch = None
+        self.show_ips_window = None
+        self.set_widgets()
+        self.place_widgets()
+
+        self.show_ips_flag = False
+        self.regex = "^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$"
+        self.spoof = None
+
+    def set_widgets(self):
+        self.spoof_bt = customtkinter.CTkButton(master=self.root,
+                                                text="Start spoof",
+                                                width=250,
+                                                height=75,
+                                                font=self.get_font(),
+                                                command=self.start_spoof,
+                                                fg_color="darkred",
+                                                hover_color="red")
+
+        self.show_ips_bt = customtkinter.CTkButton(master=self.root,
+                                                   text="Show IPs",
+                                                   width=150,
+                                                   height=40,
+                                                   font=self.get_font(20),
+                                                   command=self.display_ips,
+                                                   fg_color="darkred",
+                                                   hover_color="red")
+
+        self.input = customtkinter.CTkEntry(self.root,
+                                            placeholder_text="Enter the victim IP",
+                                            width=250,
+                                            height=30)
+
+        self.not_valid = customtkinter.CTkLabel(master=self.root,
+                                                text="not valid",
+                                                text_color="red",
+                                                compound=CENTER,
+                                                font=self.get_font())
+
+        self.switch = customtkinter.CTkSwitch(master=self.root,
+                                              text="Forward packets",
+                                              command=self.switch_event,
+                                              variable=customtkinter.StringVar(self.root, value="on"),
+                                              onvalue="on",
+                                              offvalue="off",
+                                              progress_color="red")
+
+    def set_window(self):
         self.root.title("ARP Spoofer")
         self.root.iconbitmap("assets//spoof_icon.ico")
         self.root.geometry("700x500")
         customtkinter.set_appearance_mode("dark")
-        self.spoof_bt = customtkinter.CTkButton(master=self.root, text="Start spoof", width=250, height=75,
-                                                font=self.get_font(), command=self.start_spoof, fg_color="darkred", hover_color="red")
+
+    def place_widgets(self):
         self.spoof_bt.place(relx=0.5, rely=0.35, anchor=CENTER)
-
-        self.show_ips_bt = customtkinter.CTkButton(master=self.root, text="Show IPs", width=150, height=40,
-                                                   font=self.get_font(20), command=self.display_ips, fg_color="darkred",
-                                                   hover_color="red")
         self.show_ips_bt.place(relx=0.5, rely=0.85, anchor=CENTER)
-
-        self.input = customtkinter.CTkEntry(self.root, placeholder_text="Enter the victim IP", width=250, height=30)
         self.input.place(relx=0.5, rely=0.5, anchor=CENTER)
 
-        self.regex = "^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$"
-        self.spoof = None
-
-        self.not_valid = customtkinter.CTkLabel(master=self.root, text="not valid", text_color="red",
-                                                compound=CENTER, font=self.get_font())
-
-        self.show_ips_window = None
-        self.show_ips_flag = False
+    def switch_event(self):
+        if self.spoof.forward:
+            self.spoof.forward = False
+        else:
+            self.spoof.forward = True
 
     def start_spoof(self):
         t = threading.Thread(target=self.check_ip, daemon=True)
@@ -58,6 +105,7 @@ class SpoofGui:
 
     def draw_details(self):
         self.destroy()
+        self.switch.place(relx=0.5, rely=0.9, anchor=CENTER)
         customtkinter.CTkLabel(self.root, text="your pc:", text_color="red", font=self.get_font()).place(relx=0.1, rely=0.1)
         customtkinter.CTkLabel(self.root, text=f"ip: {self.spoof.ip} mac: {self.spoof.my_mac}"
                                , font=self.get_font()).place(relx=0.15, rely=0.21)
@@ -114,6 +162,7 @@ class ArpSpoofing:
         self.gateway_ip = conf.route.route("0.0.0.0")[2]
         self.gateway_mac = self.get_mac(self.gateway_ip)
         self.running = True
+        self.forward = True
 
         self.handle_t = None
         self.run_spoof_t = None
@@ -195,6 +244,8 @@ class ArpSpoofing:
              (pkt[Ether].src == self.gateway_mac and pkt[Ether].dst == self.my_mac))
 
     def send_packet(self, pkt):
+        if not self.forward:
+            return
         """
         :param pkt: packet that needs to be rerouted
         """
