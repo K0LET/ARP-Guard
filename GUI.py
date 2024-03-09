@@ -112,14 +112,14 @@ class GUI:
                                    text=f"{ips[0]} : {self.sd.ip_mac_dict[ips[0]]}",
                                    text_color="red",
                                    font=self.font).place(relx=0.5, rely=0.9, anchor=CENTER)
-        else:
+        elif not self.sd.overlay:
             self.spoof_label.place_forget()
             self.no_spoof_label.place(relx=0.5, rely=0.825, anchor=CENTER)
 
     def detect_mac_overlay(self):
         while self.sd.overlay:
             self.detect_mac()
-            time.sleep(1)
+            time.sleep(2)
 
     def show_arp_cache(self):
         if not self.show_arp_flag:
