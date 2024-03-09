@@ -1,8 +1,10 @@
-import time
+"""
+created by Yoav Kolet
+"""
+
 from ctypes import *
 import sys
 import subprocess
-import multiprocessing
 import os
 import re
 from scapy.all import conf, sniff, Ether

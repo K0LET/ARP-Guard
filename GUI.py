@@ -1,3 +1,8 @@
+"""
+created by Yoav Kolet
+"""
+
+
 import threading
 import time
 from tkinter import *

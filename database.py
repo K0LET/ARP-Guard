@@ -1,5 +1,8 @@
+"""
+created by Yoav Kolet
+"""
+
 import pickle
-import sys
 import os
 
 
