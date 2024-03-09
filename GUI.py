@@ -1,3 +1,5 @@
+import threading
+import time
 from tkinter import *
 import customtkinter
 import Tools
@@ -16,11 +18,13 @@ class GUI:
         self.get_arp = None
         self.detect_spoof = None
         self.detect_spoof_overlay = None
+        self.spoof_label = None
+        self.no_spoof_label = None
         self.switch = None
         self.set_widgets()
         self.place_widgets()
 
-        self.overlay = False
+        self.sd.overlay = False
         self.show_arp_flag = False
         self.arp_cache = None
         self.root.mainloop()
@@ -45,7 +49,17 @@ class GUI:
                                                     width=250,
                                                     height=70,
                                                     font=self.font,
-                                                    command=self.sd.detect_mac)
+                                                    command=self.detect_mac)
+
+        self.spoof_label = customtkinter.CTkLabel(master=self.root,
+                                                  text="spoof detected from:",
+                                                  text_color="red",
+                                                  font=self.font)
+
+        self.no_spoof_label = customtkinter.CTkLabel(master=self.root,
+                                                     text=f"no spoof detected",
+                                                     text_color="green",
+                                                     font=self.font)
 
         self.detect_spoof_overlay = customtkinter.CTkLabel(self.root,
                                                            text="Detect Spoof",
@@ -59,7 +73,7 @@ class GUI:
         self.switch = customtkinter.CTkSwitch(master=self.root,
                                               text="Run in the background",
                                               command=self.switch_event,
-                                              variable=customtkinter.StringVar(self.root, value="on"),
+                                              variable=customtkinter.StringVar(self.root, value="off"),
                                               onvalue="on",
                                               offvalue="off")
 
@@ -77,19 +91,35 @@ class GUI:
         self.switch.place(relx=0.5, rely=0.77, anchor=CENTER)
 
     def switch_event(self):
-        if not self.overlay:
-            self.overlay = True
+        if not self.sd.overlay:
+            self.sd.overlay = True
+            threading.Thread(target=self.detect_mac_overlay, daemon=True).start()
             self.detect_spoof.place_forget()
             self.detect_spoof_overlay.place(relx=0.5, rely=0.7, anchor=CENTER)
         else:
-            self.overlay = False
+            self.sd.overlay = False
             self.detect_spoof_overlay.place_forget()
             self.detect_spoof.place(relx=0.5, rely=0.7, anchor=CENTER)
 
-    def run_detect_spoof_overlay(self):
-        while self.overlay:
+    def detect_mac(self):
+        flag, ips = self.sd.detect_mac()
+        if len(ips) > 1:
             pass
-        # TODO: make a overlay program
+        elif len(ips) == 1:
+            self.no_spoof_label.place_forget()
+            self.spoof_label.place(relx=0.5, rely=0.825, anchor=CENTER)
+            customtkinter.CTkLabel(master=self.root,
+                                   text=f"{ips[0]} : {self.sd.ip_mac_dict[ips[0]]}",
+                                   text_color="red",
+                                   font=self.font).place(relx=0.5, rely=0.9, anchor=CENTER)
+        else:
+            self.spoof_label.place_forget()
+            self.no_spoof_label.place(relx=0.5, rely=0.825, anchor=CENTER)
+
+    def detect_mac_overlay(self):
+        while self.sd.overlay:
+            self.detect_mac()
+            time.sleep(1)
 
     def show_arp_cache(self):
         if not self.show_arp_flag:

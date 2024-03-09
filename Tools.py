@@ -1,3 +1,4 @@
+import time
 from ctypes import *
 import sys
 import subprocess
@@ -68,6 +69,7 @@ class SpoofDetector:
         self.set_dict()
         self.gateway_mac = self.ip_mac_dict[self.gateway_ip]
         self.db = database.Database()
+        self.overlay = False
 
     def set_dict(self):
         _dict = {}

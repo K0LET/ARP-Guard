@@ -21,12 +21,12 @@ class SpoofGui:
         self.set_window()
 
         # widgets
-        self.spoof_bt = None
-        self.show_ips_bt = None
-        self.input = None
-        self.not_valid = None
-        self.switch = None
-        self.show_ips_window = None
+        # self.spoof_bt = None
+        # self.show_ips_bt = None
+        # self.input = None
+        # self.not_valid = None
+        # self.switch = None
+        # self.show_ips_window = None
         self.set_widgets()
         self.place_widgets()
 
@@ -57,12 +57,6 @@ class SpoofGui:
                                             placeholder_text="Enter the victim IP",
                                             width=250,
                                             height=30)
-
-        self.not_valid = customtkinter.CTkLabel(master=self.root,
-                                                text="not valid",
-                                                text_color="red",
-                                                compound=CENTER,
-                                                font=self.get_font())
 
         self.switch = customtkinter.CTkSwitch(master=self.root,
                                               text="Forward packets",
@@ -95,13 +89,23 @@ class SpoofGui:
 
     def check_ip(self):
         if not re.search(self.regex, self.input.get()):
-            self.not_valid.place(relx=0.5, rely=0.6, anchor=CENTER)
+            threading.Thread(target=self.display_not_valid, daemon=True).start()
         else:
             self.show_warning("This program is for learning purposes only!", "ARP Spoofer Warning")
             self.spoof = ArpSpoofing(self.input.get())
             t = threading.Thread(target=self.spoof.start_spoof, daemon=True)
             t.start()
             self.draw_details()
+
+    def display_not_valid(self):
+        not_valid = customtkinter.CTkLabel(master=self.root,
+                                           text="not valid",
+                                           text_color="red",
+                                           compound=CENTER,
+                                           font=self.get_font())
+        not_valid.place(relx=0.5, rely=0.6, anchor=CENTER)
+        time.sleep(2)
+        not_valid.place_forget()
 
     def draw_details(self):
         self.destroy()
@@ -117,10 +121,10 @@ class SpoofGui:
                                , font=self.get_font()).place(relx=0.15, rely=0.65)
 
     def destroy(self):
-        self.spoof_bt.destroy()
-        self.input.destroy()
-        self.not_valid.destroy()
-        self.show_ips_bt.destroy()
+        self.spoof_bt.place_forget()
+        self.input.place_forget()
+        self.not_valid.place_forget()
+        self.show_ips_bt.place_forget()
 
     def display_ips(self):
         if not self.show_ips_flag:
