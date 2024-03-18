@@ -7,9 +7,8 @@ import sys
 import subprocess
 import os
 import re
-from scapy.all import conf, sniff, Ether
+from scapy.all import conf, Ether
 import scapy.all as scapy
-import database
 
 
 def run_as_admin(command="arp -d"):
@@ -49,28 +48,12 @@ def get_arp_cache():
         return f.read()
 
 
-def send_arp_broadcast(target_ip):
-    # Create an ARP request packet
-    arp_request = scapy.ARP(pdst=target_ip)
-    ether_frame = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")  # Broadcast MAC address
-    # Combine the Ethernet frame and ARP request packet
-    arp_request_broadcast = ether_frame / arp_request
-    # Send the packet and receive responses
-    answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
-    # Process the responses
-    results = ""
-    for element in answered_list:
-        results += str(f"IP: {element[1].psrc}, MAC: {element[1].hwsrc}\r\n")
-    return results
-
-
 class SpoofDetector:
     def __init__(self):
         self.gateway_ip = conf.route.route("0.0.0.0")[2]
         self.ip_mac_dict = {}
         self.set_dict()
         self.gateway_mac = self.ip_mac_dict[self.gateway_ip]
-        self.db = database.Database()
         self.overlay = False
 
     def set_dict(self):
@@ -88,41 +71,9 @@ class SpoofDetector:
                 if self.ip_mac_dict[ip] == self.gateway_mac:
                     ips.append(ip)
                     ret_flag = True
-                    if not self.db.get_value(ip):
-                        self.db.set_value(ip, self.ip_mac_dict[ip])
                     print(f"spoof detected from ip:{ip} and mac{self.ip_mac_dict[ip]}")
         return ret_flag, ips
 
 
-class PacketFlow:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def arp_filter(packet):
-        if scapy.ARP in packet:
-            # Check the source MAC address and decide whether to allow or block
-            if packet[Ether].src == 'd4:12:43:f1:f1:dc':
-                print("blocked")
-                return None  # Block the packet
-            else:
-                return packet  # Allow the packet to be processed
-
-    #TODO: not working
-
-    @staticmethod
-    def print_p(packet):
-        if packet.haslayer(scapy.ARP):
-            arp_packet = packet[scapy.ARP]
-            print(f"ARP Packet: {arp_packet.psrc}")
-
-    def sniff_arp_packets(self, interface="‏‏Ethernet"):
-        # Define a custom filter for ARP packets
-        # Use scapy's sniff function to capture ARP packets
-        while True:
-            sniff(lfilter=self.arp_filter, prn=self.print_p)
-
-
 if __name__ == '__main__':
-    pf = PacketFlow()
-    pf.sniff_arp_packets()
+    run_as_admin("runas python registry_db.py")

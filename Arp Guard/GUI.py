@@ -26,6 +26,8 @@ class GUI:
         self.spoof_label = None
         self.no_spoof_label = None
         self.switch = None
+        self.detected_ip_label = None
+        self.toplevel = None
         self.set_widgets()
         self.place_widgets()
 
@@ -56,13 +58,21 @@ class GUI:
                                                     font=self.font,
                                                     command=self.detect_mac)
 
+        self.show_spoof_bt = customtkinter.CTkButton(master=self.root,
+                                                     text="show spoof details",
+                                                     fg_color="darkred",
+                                                     hover_color="red",
+                                                     width=150,
+                                                     height=30,
+                                                     command=self.set_toplevel)
+
         self.spoof_label = customtkinter.CTkLabel(master=self.root,
-                                                  text="spoof detected from:",
+                                                  text="spoof detected!",
                                                   text_color="red",
                                                   font=self.font)
 
         self.no_spoof_label = customtkinter.CTkLabel(master=self.root,
-                                                     text=f"no spoof detected",
+                                                     text="no spoof detected",
                                                      text_color="green",
                                                      font=self.font)
 
@@ -89,6 +99,24 @@ class GUI:
         self.root.iconbitmap("assets//icon.ico")
         self.root.geometry("800x700")
 
+    def set_toplevel(self):
+        self.toplevel = customtkinter.CTkToplevel()
+        self.toplevel.title("ARP Guard")
+        self.toplevel.geometry("700x400")
+
+        customtkinter.CTkLabel(self.toplevel,
+                               text="Spoof Detected from:",
+                               text_color="white",
+                               font=self.font).place(relx=0.1, rely=0.1)
+        customtkinter.CTkLabel(self.toplevel,
+                               text="IP:",
+                               text_color="white",
+                               font=self.font).place(relx=0.2, rely=0.2)
+        customtkinter.CTkLabel(self.toplevel,
+                               text="MAC:",
+                               text_color="white",
+                               font=self.font).place(relx=0.4, rely=0.2)
+
     def place_widgets(self):
         self.clear_arp.place(relx=0.5, rely=0.3, anchor=CENTER)
         self.get_arp.place(relx=0.5, rely=0.5, anchor=CENTER)
@@ -107,19 +135,24 @@ class GUI:
             self.detect_spoof.place(relx=0.5, rely=0.7, anchor=CENTER)
 
     def detect_mac(self):
-        flag, ips = self.sd.detect_mac()
-        if len(ips) > 1:
-            pass
-        elif len(ips) == 1:
-            self.no_spoof_label.place_forget()
-            self.spoof_label.place(relx=0.5, rely=0.825, anchor=CENTER)
-            customtkinter.CTkLabel(master=self.root,
-                                   text=f"{ips[0]} : {self.sd.ip_mac_dict[ips[0]]}",
-                                   text_color="red",
-                                   font=self.font).place(relx=0.5, rely=0.9, anchor=CENTER)
-        elif not self.sd.overlay:
-            self.spoof_label.place_forget()
-            self.no_spoof_label.place(relx=0.5, rely=0.825, anchor=CENTER)
+        t = threading.Thread(target=self.detect_mac_thread, daemon=True)
+        t.start()
+
+    def detect_mac_thread(self):
+        self.show_spoof_bt.place(relx=0.5, rely=0.9, anchor=CENTER)
+        # flag, ips = self.sd.detect_mac()
+        # if len(ips) > 1:
+        #     pass
+        # elif len(ips) == 1:
+        #     self.no_spoof_label.place_forget()
+        #     self.spoof_label.place(relx=0.5, rely=0.825, anchor=CENTER)
+        #     self.show_spoof_bt.place(relx=0.5, rely=0.9, anchor=CENTER)
+        # elif not self.sd.overlay:
+        #     self.show_spoof_bt.place_forget()
+        #     self.spoof_label.place_forget()
+        #     self.no_spoof_label.place(relx=0.5, rely=0.825, anchor=CENTER)
+        #     time.sleep(2)
+        #     self.no_spoof_label.place_forget()
 
     def detect_mac_overlay(self):
         while self.sd.overlay:
