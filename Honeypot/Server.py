@@ -26,16 +26,16 @@ class HoneypotServer:
         self.clients[client_ip] = [client_socket, client_port, client_mac, spoof_ip, True]
         self.recv(client_ip)
 
-    def start_honeypot(self):
-        ip = "127.0.0.1"
+    def start_honeypot(self, ip):
         # threading.Thread(target=self.recv, args=ip, daemon=True).start()
         while self.clients[ip][4]:
             packet = scapy.ARP(op=2, pdst=ip, hwdst=self.clients[ip][2], psrc=self.clients[ip][3])
+            packet.show()
             scapy.send(packet, verbose=False)
             time.sleep(2)
 
     def recv(self, ip):
-        p = threading.Thread(target=self.start_honeypot, daemon=True)
+        p = threading.Thread(target=self.start_honeypot, args=(ip, ), daemon=True)
         p.start()
         client_socket = self.clients[ip][0]
         while True:

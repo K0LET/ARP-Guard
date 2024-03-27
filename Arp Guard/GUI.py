@@ -34,6 +34,8 @@ class GUI:
         self.sd.overlay = False
         self.show_arp_flag = False
         self.arp_cache = None
+        self.display_toplevel = False
+
         self.root.mainloop()
 
     def set_widgets(self):
@@ -64,7 +66,7 @@ class GUI:
                                                      hover_color="red",
                                                      width=150,
                                                      height=30,
-                                                     command=self.set_toplevel)
+                                                     command=self.get_toplevel)
 
         self.spoof_label = customtkinter.CTkLabel(master=self.root,
                                                   text="spoof detected!",
@@ -99,6 +101,15 @@ class GUI:
         self.root.iconbitmap("assets//icon.ico")
         self.root.geometry("800x700")
 
+    def get_toplevel(self):
+        if not self.display_toplevel:
+            self.display_toplevel = True
+            self.set_toplevel()
+        else:
+            self.display_toplevel = False
+            self.toplevel.destroy()
+            self.get_toplevel()
+
     def set_toplevel(self):
         self.toplevel = customtkinter.CTkToplevel()
         self.toplevel.title("ARP Guard")
@@ -108,14 +119,42 @@ class GUI:
                                text="Spoof Detected from:",
                                text_color="white",
                                font=self.font).place(relx=0.1, rely=0.1)
+        customtkinter.CTkFrame(self.toplevel, height=300, width=300, fg_color="gray").place(relx=0.15, rely=0.2)
         customtkinter.CTkLabel(self.toplevel,
                                text="IP:",
                                text_color="white",
-                               font=self.font).place(relx=0.2, rely=0.2)
+                               font=self.font,
+                               fg_color="gray").place(relx=0.2, rely=0.2)
         customtkinter.CTkLabel(self.toplevel,
                                text="MAC:",
                                text_color="white",
-                               font=self.font).place(relx=0.4, rely=0.2)
+                               font=self.font,
+                               fg_color="gray").place(relx=0.4, rely=0.2)
+        customtkinter.CTkScrollableFrame(self.toplevel, width=250, height=230).place(relx=0.17, rely=0.3)
+        customtkinter.CTkFrame(self.toplevel,
+                               height=300,
+                               width=5,
+                               bg_color="gray",
+                               fg_color="gray",
+                               border_width=0
+                               ).place(relx=0.35, rely=0.2)
+        customtkinter.CTkButton(self.toplevel,
+                                height=100,
+                                width=100,
+                                fg_color="green",
+                                hover_color="darkgreen",
+                                text="Add Static Entry",
+                                font=self.font,
+                                command=self.static_entry_button
+                                ).place(relx=0.8, rely=0.7, anchor=CENTER)
+
+    def static_entry_button(self):
+        Tools.run_as_admin()
+        ip = self.sd.gateway_ip
+        mac = self.sd.gateway_mac
+        mac = mac.replace(":", "-")
+        cmd = f"arp -s {ip} {mac}"
+        Tools.run_as_admin(cmd)
 
     def place_widgets(self):
         self.clear_arp.place(relx=0.5, rely=0.3, anchor=CENTER)

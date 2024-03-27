@@ -11,6 +11,7 @@ from scapy.all import conf, Ether
 import scapy.all as scapy
 
 
+# arp -s ip mac (-)
 def run_as_admin(command="arp -d"):
     """
     this function run a command in the CMD with administrator privileges
