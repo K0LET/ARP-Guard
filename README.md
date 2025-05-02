@@ -33,7 +33,7 @@ You can see further instructions in the [Linux Driver](Arp-Guard/linux/driver/)
 
 ## 📦 Arp-Spoofer
 A module containing assets used in testing or spoofing tools, useful for validating detection systems in Arp-Guard.
-You can see further instructions in the [Linux Driver](Arp-Guard/Arp-Spoofer)
+You can see further instructions in the [ARP spoofer](Arp-Spoofer/)
 
 ## ⚠️ Disclaimer
 This project is intended for *educational* and *research* purposes only. Do not deploy or run these drivers on machines you do not own or control.
