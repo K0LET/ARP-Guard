@@ -37,7 +37,7 @@ sudo insmod my_driver.ko
 
 Verify it is loaded:
 ```bash
-lsmod | grep my_driver
+lsmod | grep driver
 dmesg | tail
 ```
 
