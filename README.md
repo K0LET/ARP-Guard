@@ -32,7 +32,7 @@ sudo apt install build-essential linux-headers-$(uname -r)
 You can see further instructions in the [Linux Driver](Arp-Guard/linux/driver/)
 
 ## 📦 Arp-Spoofer
-A module containing assets used in testing or spoofing tools, useful for validating detection systems in Arp-Guard.
+A module containing assets used in testing or spoofing tools, useful for validating detection systems in Arp-Guard.<br>
 You can see further instructions in the [ARP spoofer](Arp-Spoofer/)
 
 ## ⚠️ Disclaimer
