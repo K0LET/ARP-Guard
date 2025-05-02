@@ -1,0 +1,21 @@
+*.bat
+*.cmd
+*.exe
+*.o
+*.ko
+*.symvers
+*.order
+*.mod*
+
+#directories
+
+*ndislwf4/
+*POCDriver/
+
+# Ignore common IDE files
+.idea/
+.vscode/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
