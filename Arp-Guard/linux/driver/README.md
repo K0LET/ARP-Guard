@@ -4,7 +4,7 @@ This project contains a Linux kernel module used as part of the Arp-Guard system
 
 ## 📁 Project Structure
 
-Arp-Guard/
+Arp-Guard/<br>
 ├── linux/<br>
 │ ├── assets/ # Static files/resources<br>
 │ └── driver/ # Linux driver source and Makefile<br>
